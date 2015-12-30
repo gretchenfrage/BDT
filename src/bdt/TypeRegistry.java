@@ -1,6 +1,7 @@
 package bdt;
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +15,8 @@ import bdt.variabletypes.LongVar;
 import bdt.variabletypes.SerializableVar;
 import bdt.variabletypes.ShortVar;
 import bdt.variabletypes.StringVar;
+import bdt.variabletypes.directories.ListFolder;
+import bdt.variabletypes.directories.ArrayFolder;
 import bdt.variabletypes.directories.NameFolder;
 
 /*
@@ -22,7 +25,20 @@ import bdt.variabletypes.directories.NameFolder;
  */
 public class TypeRegistry {
 	
-
+	public static final byte INTEGER_ID = 0;
+	public static final byte LONG_ID = 1;
+	public static final byte SHORT_ID = 2;
+	public static final byte FLOAT_ID = 3;
+	public static final byte BYTE_ID = 4;
+	public static final byte BOOLEAN_ID = 5;
+	public static final byte DOUBLE_ID = 6;
+	public static final byte CHAR_ID = 7;
+	public static final byte STRING_ID = 8;
+	public static final byte SERIALIZABLE_ID = 9;
+	public static final byte NAME_FOLDER_ID = 10;
+	public static final byte LIST_FOLDER_ID = 11;
+	public static final byte ARRAY_FOLDER_ID = 12;
+	
 	private static interface Type {
 	
 		boolean isAnInstance(Variable variable);
@@ -33,7 +49,7 @@ public class TypeRegistry {
 	
 	private static Map<Byte, Type> types = new HashMap<Byte, Type>();
 	static {
-		types.put((byte) 0, new Type() {
+		types.put((byte) INTEGER_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -47,7 +63,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 1, new Type() {
+		types.put((byte) LONG_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -61,7 +77,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 2, new Type() {
+		types.put((byte) SHORT_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -75,7 +91,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 3, new Type() {
+		types.put((byte) FLOAT_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -89,7 +105,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 4, new Type() {
+		types.put((byte) BYTE_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -103,7 +119,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 5, new Type() {
+		types.put((byte) BOOLEAN_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -117,7 +133,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 6, new Type() {
+		types.put((byte) DOUBLE_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -131,7 +147,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 7, new Type() {
+		types.put((byte) CHAR_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -145,7 +161,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 8, new Type() {
+		types.put((byte) STRING_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -159,7 +175,7 @@ public class TypeRegistry {
 			
 		});
 
-		types.put((byte) 9, new Type() {
+		types.put((byte) SERIALIZABLE_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -173,7 +189,7 @@ public class TypeRegistry {
 			
 		});
 		
-		types.put((byte) 10, new Type() {
+		types.put((byte) NAME_FOLDER_ID, new Type() {
 			
 			@Override
 			public boolean isAnInstance(Variable variable) {
@@ -186,9 +202,37 @@ public class TypeRegistry {
 			}
 			
 		});
+		
+		types.put((byte) LIST_FOLDER_ID, new Type() {
+			
+			@Override
+			public boolean isAnInstance(Variable variable) {
+				return variable instanceof ListFolder;
+			}
+			
+			@Override
+			public Variable constructFrom(InputStream stream) {
+				return new ListFolder(stream);
+			}
+			
+		});
+		
+		types.put((byte) ARRAY_FOLDER_ID, new Type() {
+			
+			@Override
+			public boolean isAnInstance(Variable variable) {
+				return variable instanceof ArrayFolder;
+			}
+			
+			@Override
+			public Variable constructFrom(InputStream stream) {
+				return new ArrayFolder(stream);
+			}
+			
+		});
 	}
 	
-	public static byte getTypeID(Variable variable) throws RuntimeException {
+	public static byte getTypeID(Variable variable) {
 		for (Map.Entry<Byte, ? extends Type> entry : types.entrySet()) {
 			if (entry.getValue().isAnInstance(variable)) {
 				return entry.getKey();
@@ -197,7 +241,7 @@ public class TypeRegistry {
 		throw new RuntimeException("Type ID not found by object");
 	}
 	
-	public static Variable construct(byte typeID, InputStream stream) throws RuntimeException {
+	public static Variable construct(byte typeID, InputStream stream) {
 		Type type = types.get(typeID);
 		if (type != null) {
 			return types.get(typeID).constructFrom(stream);
@@ -206,10 +250,22 @@ public class TypeRegistry {
 		}
 	}
 	
-	public static byte[] toBytes(Variable variable) {
-		ByteArrayOutputStream stream = new ByteArrayOutputStream();
-		variable.writeBytes(stream);
-		return stream.toByteArray();
+	public static Variable constructWithID(InputStream stream) {
+		try {
+			byte typeID = (byte) stream.read();
+			return construct(typeID, stream);
+		} catch (IOException e) {
+			throw new RuntimeException();
+		}
+	}
+	
+	public static void writeWithID(Variable variable, OutputStream stream) {
+		try {
+			stream.write(getTypeID(variable));
+			variable.writeTo(stream);
+		} catch (IOException e) {
+			throw new RuntimeException();
+		}
 	}
 	
 }

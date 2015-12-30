@@ -33,7 +33,7 @@ public class CharVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			stream.write(BinOps.charToBytes(value));
 		} catch (IOException e) {

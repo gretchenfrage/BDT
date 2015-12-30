@@ -33,7 +33,7 @@ public class ShortVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			stream.write(BinOps.shortToBytes(value));
 		} catch (IOException e) {

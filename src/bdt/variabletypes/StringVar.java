@@ -41,7 +41,7 @@ public class StringVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			byte[] body = BinOps.stringToBytes(value);
 			stream.write(BinOps.intToBytes(body.length));

@@ -23,6 +23,9 @@ public class NameFolder implements Variable {
 	
 	public NameFolder() {}
 	
+	/*
+	 * stored as [(int) body length, [(short) name length, (string) name, (byte) type ID, content] ... ]
+	 */
 	public NameFolder(InputStream stream) {
 		try {
 			//determine body length
@@ -43,14 +46,10 @@ public class NameFolder implements Variable {
 				byte[] nameBytes = new byte[nameLength];
 				bodyStream.read(nameBytes);
 				String name = BinOps.bytesToString(nameBytes);
-				//extract type ID
-				byte typeID = (byte) bodyStream.read();
-				//extract contents and construct
-				Variable value = TypeRegistry.construct(typeID, bodyStream);
-				//add
-				contents.put(name, value);
+				//extract variable
+				contents.put(name, TypeRegistry.constructWithID(bodyStream));
 			}
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw new RuntimeException();
 		}
 	}
@@ -83,11 +82,8 @@ public class NameFolder implements Variable {
 		return new ArrayList<Variable>(contents.values());
 	}
 	
-	/*
-	 * variables are stored in [(int) total contents length, [[(short) name length, name, (byte) type ID, content], repeat]]  format
-	 */
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 			for (Entry<String, Variable> entry : contents.entrySet()) {
@@ -96,8 +92,7 @@ public class NameFolder implements Variable {
 				byte typeID = TypeRegistry.getTypeID(entry.getValue());
 				buffer.write(nameLength);
 				buffer.write(name);
-				buffer.write(typeID);
-				entry.getValue().writeBytes(buffer);
+				TypeRegistry.writeWithID(entry.getValue(), buffer);
 			}
 			byte[] body = buffer.toByteArray();
 			stream.write(BinOps.intToBytes(body.length));
@@ -107,6 +102,7 @@ public class NameFolder implements Variable {
 		}
 	}
 	
+	@Override
 	public String toString() {
 		String out = "[";
 		List<Entry<String, Variable>> list = new ArrayList<Entry<String, Variable>>(contents.entrySet());

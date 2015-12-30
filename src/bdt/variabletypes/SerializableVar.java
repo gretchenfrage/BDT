@@ -42,7 +42,7 @@ public class SerializableVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			byte[] body = BinOps.serializableToBytes(value);
 			stream.write(BinOps.intToBytes(body.length));

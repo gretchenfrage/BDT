@@ -4,6 +4,6 @@ import java.io.OutputStream;
 
 public interface Variable {
 	
-	void writeBytes(OutputStream stream);
+	void writeTo(OutputStream stream);
 	
 }

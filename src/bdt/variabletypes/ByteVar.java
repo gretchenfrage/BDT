@@ -30,7 +30,7 @@ public class ByteVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			stream.write(value);
 		} catch (IOException e) {

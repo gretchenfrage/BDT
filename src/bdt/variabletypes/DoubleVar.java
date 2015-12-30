@@ -33,7 +33,7 @@ public class DoubleVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			stream.write(BinOps.doubleToBytes(value));
 		} catch (IOException e) {

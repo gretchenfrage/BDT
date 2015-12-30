@@ -19,8 +19,7 @@ public class BDTFile {
 	public BDTFile(File fileIn) {
 		file = fileIn;
 		try (InputStream stream = new FileInputStream(file)) {
-			byte typeID = (byte) stream.read();
-			variable = TypeRegistry.construct(typeID, stream);
+			variable = TypeRegistry.constructWithID(stream);
 		} catch (IOException e) {
 			throw new RuntimeException();
 		}
@@ -49,9 +48,7 @@ public class BDTFile {
 	
 	public void save() {
 		try (OutputStream stream = new FileOutputStream(file)) {
-			byte typeID = TypeRegistry.getTypeID(variable);
-			stream.write(typeID);
-			variable.writeBytes(stream);
+			TypeRegistry.writeWithID(variable, stream);
 		} catch (IOException e) {
 			throw new RuntimeException();
 		}

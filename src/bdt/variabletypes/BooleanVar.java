@@ -30,7 +30,7 @@ public class BooleanVar implements Variable {
 	}
 	
 	@Override
-	public void writeBytes(OutputStream stream) {
+	public void writeTo(OutputStream stream) {
 		try {
 			stream.write((byte) (value ? 1 : 0));
 		} catch (IOException e) {
@@ -39,7 +39,7 @@ public class BooleanVar implements Variable {
 	}
 	
 	public String toString() {
-		return "true";
+		return Boolean.toString(value);
 	}
 
 }
